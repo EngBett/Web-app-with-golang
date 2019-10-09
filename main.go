@@ -4,6 +4,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"net/http"
 )
@@ -23,10 +24,17 @@ func main() {
 	r.HandleFunc("/", indexGetHandler).Methods("GET")
 	r.HandleFunc("/", indexPostHandler).Methods("POST")
 
+	/**
+	Login Routes
+	*/
 	r.HandleFunc("/login", loginGetHandler).Methods("GET")
 	r.HandleFunc("/login", loginPostHandler).Methods("POST")
 
-	r.HandleFunc("/test", testGetHandler).Methods("GET")
+	/**
+	Registration Routes
+	*/
+	r.HandleFunc("/register", registerGetHandler).Methods("GET")
+	r.HandleFunc("/register", registerPostHandler).Methods("POST")
 
 	fs := http.FileServer(http.Dir("./static/"))
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))
@@ -35,6 +43,11 @@ func main() {
 }
 
 func indexGetHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "username")
+	_, ok := session.Values["username"]
+	if !ok {
+		http.Redirect(w, "/login", 302)
+	}
 	comments, err := client.LRange("comments", 0, 10).Result()
 	if err != nil {
 		return
@@ -56,25 +69,34 @@ func loginGetHandler(w http.ResponseWriter, r *http.Request) {
 func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	username := r.PostForm.Get("username")
+	password := r.PostForm.Get("password")
+	hash, err := client.Get("User:" + username).Bytes()
+	if err != nil {
+		return
+	}
+	err = bcrypt.CompareHashAndPassword(hash, []byte(password))
+
+	if err != nil {
+		return
+	}
+
 	session, _ := store.Get(r, "session")
 	session.Values["username"] = username
 	session.Save(r, w)
-	http.Redirect(w, r, "/test", 302)
 }
 
-func testGetHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
-	untyped, ok := session.Values["username"]
+func registerGetHandler(w http.ResponseWriter, r *http.Request) {
+	templates.ExecuteTemplate(w, "register.html", nil)
+}
 
-	if !ok {
+func registerPostHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.PostForm.Get("username")
+	password := r.PostForm.Get("password")
+	cost := bcrypt.DefaultCost
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+	if err != nil {
 		return
 	}
-
-	username, ok := untyped.(string)
-
-	if !ok {
-		return
-	}
-
-	w.Write([]byte(username))
+	client.Set("User:"+username, hash, 0)
 }
