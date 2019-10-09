@@ -50,7 +50,7 @@ func indexPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginGetHandler(w http.ResponseWriter, r *http.Request) {
-
+	templates.ExecuteTemplate(w, "login.html", nil)
 }
 
 func loginPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +59,7 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 	session.Values["username"] = username
 	session.Save(r, w)
+	http.Redirect(w, r, "/test", 302)
 }
 
 func testGetHandler(w http.ResponseWriter, r *http.Request) {
