@@ -1,25 +1,79 @@
 package main
 
 import (
-	"fmt"
+	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
+	"html/template"
 	"net/http"
 )
 
+var client *redis.Client
+var store = sessions.NewCookieStore([]byte("t0p-s3cr3t"))
+var templates *template.Template
+
 func main() {
 
-	r := mux.NewRouter()
-	r.HandleFunc("/hello", helloHandler).Methods("GET")
-	r.HandleFunc("/goodbye", goodbyeHandler).Methods("GET")
-	http.Handle("/", r)
+	client = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	templates = template.Must(template.ParseGlob("templates/*.html"))
 
+	r := mux.NewRouter()
+	r.HandleFunc("/", indexGetHandler).Methods("GET")
+	r.HandleFunc("/", indexPostHandler).Methods("POST")
+
+	r.HandleFunc("/login", loginGetHandler).Methods("GET")
+	r.HandleFunc("/login", loginPostHandler).Methods("POST")
+
+	r.HandleFunc("/test", testGetHandler).Methods("GET")
+
+	fs := http.FileServer(http.Dir("./static/"))
+	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))
+	http.Handle("/", r)
 	http.ListenAndServe(":8000", nil)
 }
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello world here")
+func indexGetHandler(w http.ResponseWriter, r *http.Request) {
+	comments, err := client.LRange("comments", 0, 10).Result()
+	if err != nil {
+		return
+	}
+	templates.ExecuteTemplate(w, "index.html", comments)
 }
 
-func goodbyeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Goodbye world here")
+func indexPostHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	comment := r.PostForm.Get("comment")
+	client.LPush("comments", comment)
+	http.Redirect(w, r, "/", 302)
+}
+
+func loginGetHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func loginPostHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.PostForm.Get("username")
+	session, _ := store.Get(r, "session")
+	session.Values["username"] = username
+	session.Save(r, w)
+}
+
+func testGetHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+	untyped, ok := session.Values["username"]
+
+	if !ok {
+		return
+	}
+
+	username, ok := untyped.(string)
+
+	if !ok {
+		return
+	}
+
+	w.Write([]byte(username))
 }

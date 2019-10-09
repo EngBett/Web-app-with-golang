@@ -3,8 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Web with Go</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
 </head>
 <body>
+    <h1>Comments</h1>
 
+
+    <form method="post" style="margin: 20px">
+        <textarea name="comment">
+
+        </textarea>
+        <div>
+            <button type="submit">Post Comment</button>
+        </div>
+    </form>
+
+    {{range .}}
+    <div>{{ . }}</div>
+    {{end}}
 </body>
 </html>
