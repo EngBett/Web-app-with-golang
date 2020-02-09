@@ -38,6 +38,7 @@ func main() {
 	r.HandleFunc("/register", registerGetHandler).Methods("GET")
 	r.HandleFunc("/register", registerPostHandler).Methods("POST")
 
+	//Serve
 	fs := http.FileServer(http.Dir("./static/"))
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))
 	http.Handle("/", r)
