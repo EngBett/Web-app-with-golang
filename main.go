@@ -23,8 +23,8 @@ func main() {
 	templates = template.Must(template.ParseGlob("templates/*.html"))
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", indexGetHandler).Methods("GET")
-	r.HandleFunc("/", indexPostHandler).Methods("POST")
+	r.HandleFunc("/", AuthRequired(indexGetHandler)).Methods("GET")
+	r.HandleFunc("/", AuthRequired(indexPostHandler)).Methods("POST")
 
 	/**
 	Login Routes
@@ -44,13 +44,24 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 
-func indexGetHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
-	_, ok := session.Values["username"]
-	if !ok {
-		http.Redirect(w, r, "/login", 302)
-		return
+/**
+Middleware
+*/
+func AuthRequired(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, _ := store.Get(r, "session")
+		_, ok := session.Values["username"]
+
+		if !ok {
+			http.Redirect(w, r, "/login", 302)
+			return
+		}
+
+		handler.ServeHTTP(w, r)
 	}
+}
+
+func indexGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	comments, err := client.LRange("comments", 0, 10).Result()
 	if err != nil {
