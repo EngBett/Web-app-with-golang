@@ -63,7 +63,7 @@ func indexGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.ExecuteTemplate(w, "index.html", comments)
+	utils.ExecuteTemplate(w, "index.html", comments)
 }
 
 func indexPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +80,7 @@ func indexPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginGetHandler(w http.ResponseWriter, r *http.Request) {
-	templates.ExecuteTemplate(w, "login.html", nil)
+	utils.ExecuteTemplate(w, "login.html", nil)
 }
 
 func loginPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,9 +93,9 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case models.ErrUserNotFound:
-			templates.ExecuteTemplate(w, "login.html", "unknown user")
+			utils.ExecuteTemplate(w, "login.html", "unknown user")
 		case models.ErrInvalidLogin:
-			templates.ExecuteTemplate(w, "login.html", "Invalid login")
+			utils.ExecuteTemplate(w, "login.html", "Invalid login")
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Internal server error"))
@@ -112,7 +112,7 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func registerGetHandler(w http.ResponseWriter, r *http.Request) {
-	templates.ExecuteTemplate(w, "register.html", nil)
+	utils.ExecuteTemplate(w, "register.html", nil)
 }
 
 func registerPostHandler(w http.ResponseWriter, r *http.Request) {
