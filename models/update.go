@@ -29,11 +29,11 @@ func NewUpdate(userId int64, body string) (*User, error) {
 	return &User{key}, nil
 }
 
-func (update *Update) getBody() (string, error) {
+func (update *Update) GetBody() (string, error) {
 	return client.HGet(update.key, "body").Result()
 }
 
-func (update *Update) getUser() (*User, error) {
+func (update *Update) GetUser() (*User, error) {
 	userId, err := client.HGet(update.key, "user_id").Int64()
 	if err != nil {
 		return nil, err
