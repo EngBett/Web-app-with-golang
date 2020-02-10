@@ -36,7 +36,7 @@ func NewUser(username string, hash []byte) (*User, error) {
 		return nil, err
 	}
 
-	return &user{key}, nil
+	return &User{key}, nil
 }
 
 func (user *User) GetUsername() (string, error) {
@@ -48,7 +48,34 @@ func (user *User) GetHash() ([]byte, error) {
 }
 
 func (user *User) Authenticate(password string) error {
+	hash, err := user.GetHash()
 
+	if err != nil {
+		return err
+	}
+
+	err = bcrypt.CompareHashAndPassword(hash, []byte(password))
+
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return ErrInvalidLogin
+	}
+
+	return err
+
+}
+
+func GetUserByUsername(username string) (*User, error) {
+	id, err := client.HGet("user:by-username", username).Int64()
+
+	//user not found || error 500
+	if err == redis.Nil {
+		return nil, ErrUserNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	key := fmt.Sprintf("user:%d", id)
+	return &User{key}, nil
 }
 
 func RegisterUser(username, password string) error {
@@ -59,25 +86,17 @@ func RegisterUser(username, password string) error {
 		return err
 	}
 
-	return client.Set("User:"+username, hash, 0).Err()
+	_, err = NewUser(username, hash)
+
+	return err
 }
 
 func AuthenticatesUser(username, password string) error {
-	hash, err := client.Get("User:" + username).Bytes()
+	user, err := GetUserByUsername(username)
 
-	//user not found || error 500
-	if err == redis.Nil {
-		return ErrUserNotFound
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 
-	err = bcrypt.CompareHashAndPassword(hash, []byte(password))
-
-	// Wrong password
-	if err != nil {
-		return ErrInvalidLogin
-	}
-
-	return nil
+	return user.Authenticate(password)
 }
