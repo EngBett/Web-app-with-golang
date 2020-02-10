@@ -6,20 +6,26 @@
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
 </head>
 <body>
-    <h1>Updates</h1>
+<h1>Updates</h1>
 
 
-    <form method="post" style="margin: 20px">
+<form method="post" style="margin: 20px">
         <textarea name="update">
 
         </textarea>
-        <div>
-            <button type="submit">Post Update</button>
-        </div>
-    </form>
+    <div>
+        <button type="submit">Post Update</button>
+    </div>
+</form>
 
-    {{range .}}
-    <div>{{ . }}</div>
-    {{end}}
+{{range .}}
+
+    <div>
+        <div>
+            <strong>{{.GetUser.GetUsername}}</strong>
+        </div>
+        <div>{{ .GetBody }}</div>
+    </div>
+{{end}}
 </body>
 </html>
