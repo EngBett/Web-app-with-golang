@@ -35,6 +35,7 @@ func GetUpdates() ([]string, error) {
 }
 
 //post comment
-func PostUpdate(body string) error {
-	return client.LPush("updates", body).Err()
+func PostUpdate(userId int64, body string) error {
+	_, err := NewUpdate(userId, body)
+	return err
 }

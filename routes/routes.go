@@ -46,9 +46,20 @@ func indexGetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func indexPostHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := sessions.Store.Get(r, "session")
+	untypedUserId := session.Values["user_id"]
+
+	userId, ok := untypedUserId.(int64)
+
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal server error"))
+		return
+	}
+
 	r.ParseForm()
 	body := r.PostForm.Get("update")
-	err := models.PostUpdate(body)
+	err := models.PostUpdate(userId, body)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
