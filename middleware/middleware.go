@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/gorilla/sessions"
+	"../sessions"
 	"net/http"
 )
 
