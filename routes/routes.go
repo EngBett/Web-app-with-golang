@@ -36,6 +36,7 @@ func NewRouter() *mux.Router {
 func indexGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	updates, err := models.GetUpdates()
+
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Internal server error"))

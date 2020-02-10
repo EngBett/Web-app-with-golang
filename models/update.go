@@ -29,9 +29,33 @@ func NewUpdate(userId int64, body string) (*User, error) {
 	return &User{key}, nil
 }
 
+func (update *Update) getBody() (string, error) {
+	return client.HGet(update.key, "body").Result()
+}
+
+func (update *Update) getUser() (*User, error) {
+	userId, err := client.HGet(update.key, "user_id").Int64()
+	if err != nil {
+		return nil, err
+	}
+
+	return GetUserById(userId)
+}
+
 //fetch comments
-func GetUpdates() ([]string, error) {
-	return client.LRange("updates", 0, 10).Result()
+func GetUpdates() ([]*Update, error) {
+	updateIds, err := client.LRange("updates", 0, 10).Result()
+
+	if err != nil {
+		return nil, err
+	}
+	updates := make([]*Update, len(updateIds))
+
+	for i, id := range updateIds {
+		key := "update:" + id
+		updates[i] = &Update{key}
+	}
+	return updates, err
 }
 
 //post comment

@@ -68,6 +68,11 @@ func (user *User) Authenticate(password string) error {
 
 }
 
+func GetUserById(id int64) (*User, error) {
+	key := fmt.Sprintf("user:%d", id)
+	return &User{key}, nil
+}
+
 func GetUserByUsername(username string) (*User, error) {
 	id, err := client.HGet("user:by-username", username).Int64()
 
@@ -78,8 +83,7 @@ func GetUserByUsername(username string) (*User, error) {
 		return nil, err
 	}
 
-	key := fmt.Sprintf("user:%d", id)
-	return &User{key}, nil
+	return GetUserById(id)
 }
 
 func RegisterUser(username, password string) error {
