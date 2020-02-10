@@ -35,20 +35,20 @@ func NewRouter() *mux.Router {
 
 func indexGetHandler(w http.ResponseWriter, r *http.Request) {
 
-	comments, err := models.GetComments()
+	updates, err := models.GetUpdates()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Internal server error"))
 		return
 	}
 
-	utils.ExecuteTemplate(w, "index.html", comments)
+	utils.ExecuteTemplate(w, "index.html", updates)
 }
 
 func indexPostHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	comment := r.PostForm.Get("comment")
-	err := models.PostComment(comment)
+	body := r.PostForm.Get("update")
+	err := models.PostUpdate(body)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
