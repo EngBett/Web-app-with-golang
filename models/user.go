@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"github.com/go-redis/redis"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -10,6 +11,37 @@ var (
 	ErrUserNotFound = errors.New("user not found")
 	ErrInvalidLogin = errors.New("Invalid Login")
 )
+
+type User struct {
+	key string
+}
+
+func NewUser(username string, hash []byte) (*User, error) {
+	id, err := client.Incr("user:next-id").Result()
+
+	if err != nil {
+		return nil, err
+	}
+
+	key := fmt.Sprintf("user:%d", id)
+	pipe := client.Pipeline()
+	pipe.HSet(key, "id", id)
+	pipe.HSet(key, "username", username)
+	pipe.HSet(key, "hash", hash)
+	pipe.HSet("user:by-username", username, id)
+
+	_, err = pipe.Exec()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user{key}, nil
+}
+
+func (user *User) GetUsername() (string, error) {
+	return client.HGet(user.key, "username")
+}
 
 func RegisterUser(username, password string) error {
 	cost := bcrypt.DefaultCost
