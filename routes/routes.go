@@ -67,7 +67,7 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.PostForm.Get("username")
 	password := r.PostForm.Get("password")
 
-	err := models.AuthenticatesUser(username, password)
+	user, err := models.AuthenticatesUser(username, password)
 
 	if err != nil {
 		switch err {
@@ -83,8 +83,16 @@ func loginPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userId, err := user.GetId()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal server error"))
+		return
+	}
+
 	session, _ := sessions.Store.Get(r, "session")
-	session.Values["username"] = username
+	session.Values["user_id"] = userId
 	session.Save(r, w)
 
 	http.Redirect(w, r, "/", 302)
