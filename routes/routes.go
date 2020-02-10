@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"../middleware"
 	"../models"
 	"../sessions"
 	"../utils"
@@ -10,8 +11,8 @@ import (
 
 func NewRouter() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/", AuthRequired(indexGetHandler)).Methods("GET")
-	r.HandleFunc("/", AuthRequired(indexPostHandler)).Methods("POST")
+	r.HandleFunc("/", middleware.AuthRequired(indexGetHandler)).Methods("GET")
+	r.HandleFunc("/", middleware.AuthRequired(indexPostHandler)).Methods("POST")
 
 	/**
 	Login Routes
@@ -30,23 +31,6 @@ func NewRouter() *mux.Router {
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))
 
 	return r
-}
-
-/**
-Middleware
-*/
-func AuthRequired(handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		session, _ := sessions.Store.Get(r, "session")
-		_, ok := session.Values["username"]
-
-		if !ok {
-			http.Redirect(w, r, "/login", 302)
-			return
-		}
-
-		handler.ServeHTTP(w, r)
-	}
 }
 
 func indexGetHandler(w http.ResponseWriter, r *http.Request) {
