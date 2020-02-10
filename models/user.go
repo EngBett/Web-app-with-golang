@@ -40,7 +40,15 @@ func NewUser(username string, hash []byte) (*User, error) {
 }
 
 func (user *User) GetUsername() (string, error) {
-	return client.HGet(user.key, "username")
+	return client.HGet(user.key, "username").Result()
+}
+
+func (user *User) GetHash() ([]byte, error) {
+	return client.HGet(user.key, "hash").Bytes()
+}
+
+func (user *User) Authenticate(password string) error {
+
 }
 
 func RegisterUser(username, password string) error {
